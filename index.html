@@ -16,8 +16,21 @@
             top: 10px;
             left: 10px;
             background: white;
-            padding: 10px;
-          
+        }
+
+        /* Style pour le nouveau compteur en bas de l'écran */
+        #compteur-z {
+            position: absolute;
+            bottom: 20px;
+            left: 95%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.75);
+            color: rgb(0, 0, 0);
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 10;
+            pointer-events: none; /* Ne bloque pas les clics de souris */
         }
     </style>
 </head>
@@ -27,14 +40,18 @@
     <div id="info">
         ↑ ↓ : avancer / reculer<br>
         ← → : déplacer<br>
-      
     </div>
+
+    <div id="compteur-z">Z: 10</div>
 
     <script type="module">
         import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170/build/three.module.js";
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xe6e6e6);
+
+        // Récupération de l'élément du compteur
+        const compteurZElement = document.getElementById('compteur-z');
 
         // Caméra
         const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -59,7 +76,7 @@
         // Outils pour rendre l'image cliquable
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        let panneauInteractif = null; // Contiendra le mesh cliquable
+        let panneauInteractif = null; 
 
         // Chargeur de texture
         const textureLoader = new THREE.TextureLoader();
@@ -91,26 +108,37 @@
             scene.add(groupe);
         }
 
-        // Remplace l'ancienne porte par l'image 2.png cliquable
+        // Fonction modifiée pour charger l'image finale en respectant son ratio d'aspect
         function creerTableauFinal(z) {
             const groupeTableau = new THREE.Group();
+            const hauteurFixe = 5.6; // On fixe la hauteur maximale souhaitée dans le musée
 
-            // Cadre extérieur blanc en fil de fer
-            const cadre = new THREE.Mesh(
-                new THREE.BoxGeometry(6, 6, 0.2),
-                new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
-            );
-            groupeTableau.add(cadre);
+            // Chargement de la texture avec une fonction de rappel (callback) pour obtenir les dimensions
+            textureLoader.load("8.jpg", function(texture) {
+                const imageSource = texture.image;
+                
+                // Calcul du ratio d'aspect (largeur / hauteur)
+                const ratio = imageSource.width / imageSource.height;
+                // La largeur s'adapte proportionnellement à la hauteur fixe définie
+                const largeurAdaptee = hauteurFixe * ratio;
 
-            // Panneau affichant "2.png"
-            const textureFinale = textureLoader.load("8.jpg");
-            panneauInteractif = new THREE.Mesh(
-                new THREE.PlaneGeometry(5.6, 5.6),
-                new THREE.MeshBasicMaterial({ map: textureFinale, side: THREE.DoubleSide })
-            );
-            panneauInteractif.position.z = 0.11;
-            groupeTableau.add(panneauInteractif);
+                // Création du cadre extérieur en fil de fer adapté au ratio
+                const cadre = new THREE.Mesh(
+                    new THREE.BoxGeometry(largeurAdaptee + 0.4, hauteurFixe + 0.4, 0.2),
+                    new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+                );
+                groupeTableau.add(cadre);
 
+                // Création du panneau d'affichage respectant parfaitement le ratio
+                panneauInteractif = new THREE.Mesh(
+                    new THREE.PlaneGeometry(largeurAdaptee, hauteurFixe),
+                    new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide })
+                );
+                panneauInteractif.position.z = 0.11;
+                groupeTableau.add(panneauInteractif);
+            });
+
+            // Positionnement au centre du couloir
             groupeTableau.position.set(0, 3, z);
             scene.add(groupeTableau);
         }
@@ -120,7 +148,7 @@
                 limiteZ = -400;
                 
                 if (!finCreee) {
-                    creerTableauFinal(-415); // Place le tableau final juste après les derniers cubes
+                    creerTableauFinal(-415); 
                     finCreee = true;
                 }
             }
@@ -143,7 +171,6 @@
             if (panneauInteractif) {
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObject(panneauInteractif);
-                // Si la souris survole l'image, le curseur devient une main
                 document.body.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
             }
         });
@@ -152,7 +179,6 @@
             if (panneauInteractif) {
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObject(panneauInteractif);
-                // Si on clique sur l'image, on est redirigé vers page2.html
                 if (intersects.length > 0) {
                     window.location.href = "page2.html";
                 }
@@ -174,12 +200,16 @@
 
             genererMuseeInfiniment(camera.position.z - 80);
 
-            // Empêche la caméra de foncer et de traverser l'image finale
+            // Empêche la caméra de traverser le tableau final
             if (camera.position.z < -408) {
                 camera.position.z = -408;
             }
 
             floor.position.z = camera.position.z - 100;
+
+            // MISE À JOUR DU COMPTEUR EN BAS DE L'ÉCRAN
+            // Math.floor permet d'avoir un affichage propre sans virgules
+            compteurZElement.textContent = `Z : ${Math.floor(camera.position.z)}`;
 
             renderer.render(scene, camera);
         }
