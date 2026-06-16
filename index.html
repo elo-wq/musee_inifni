@@ -18,7 +18,7 @@
             background: white;
         }
 
-        /* Style pour le nouveau compteur en bas de l'écran */
+        /* compteur-z */
         #compteur-z {
             position: absolute;
             bottom: 20px;
@@ -30,7 +30,7 @@
             font-size: 16px;
             font-weight: bold;
             z-index: 10;
-            pointer-events: none; /* Ne bloque pas les clics de souris */
+            pointer-events: none; 
         }
     </style>
 </head>
@@ -50,10 +50,10 @@
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xe6e6e6);
 
-        // Récupération de l'élément du compteur
+       
         const compteurZElement = document.getElementById('compteur-z');
 
-        // Caméra
+        // Cam
         const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 1.7, 10);
 
@@ -62,7 +62,7 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Lumière
+        // Light
         scene.add(new THREE.AmbientLight(0xffffff, 2));
 
         // Sol
@@ -73,12 +73,11 @@
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
-        // Outils pour rendre l'image cliquable
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let panneauInteractif = null; 
 
-        // Chargeur de texture
+        // texture
         const textureLoader = new THREE.TextureLoader();
         const monImage = "1.png";
 
@@ -108,7 +107,7 @@
             scene.add(groupe);
         }
 
-        // Fonction modifiée pour charger l'image finale en respectant son ratio d'aspect
+        // 
         function creerTableauFinal(z) {
             const groupeTableau = new THREE.Group();
             const hauteurFixe = 5.6; // On fixe la hauteur maximale souhaitée dans le musée
@@ -144,11 +143,11 @@
         }
 
         function genererMuseeInfiniment(limiteZ) {
-            if (limiteZ < -400) {
-                limiteZ = -400;
+            if (limiteZ < -300) {
+                limiteZ = -300;
                 
                 if (!finCreee) {
-                    creerTableauFinal(-415); 
+                    creerTableauFinal(-315); 
                     finCreee = true;
                 }
             }
@@ -201,8 +200,8 @@
             genererMuseeInfiniment(camera.position.z - 80);
 
             // Empêche la caméra de traverser le tableau final
-            if (camera.position.z < -408) {
-                camera.position.z = -408;
+            if (camera.position.z < -308) {
+                camera.position.z = -308;
             }
 
             floor.position.z = camera.position.z - 100;
